@@ -33,6 +33,7 @@ func NewProgram(dir string, redirect bool, execName string, args ...string) (*Pr
 		args:     args,
 		exitC:    make(chan struct{}, 3),
 		redirect: redirect,
+		lastExitCode: -1,
 	}
 
 	return p, nil
@@ -53,6 +54,10 @@ func (p *Program) Start() error {
 	}
 
 	return nil
+}
+
+func (p *Program) LastExitCode() int {
+	return p.lastExitCode
 }
 
 func (p *Program) start() error {
