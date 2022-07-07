@@ -6,7 +6,7 @@ import (
 	"syscall"
 )
 
-func SendCtrlC(p *os.Process) error {
+func sendCtrlC(p *os.Process) error {
 	d, e := loadKernel32()
 	if e != nil {
 		return e
@@ -55,26 +55,13 @@ func removeConsoleCtrlHandler(d *syscall.DLL) error {
 	return setConsoleCtrlHandler(d, true)
 }
 
-func RemoveConsoleCtrlHandler() error {
+func restoreConsoleCtrlHandler() error {
 	d, e := loadKernel32()
 	if e != nil {
 		return e
 	}
 
-	return removeConsoleCtrlHandler(d)
-}
-
-func restoreConsoleCtrlHandler(d *syscall.DLL) error {
 	return setConsoleCtrlHandler(d, false)
-}
-
-func RestoreConsoleCtrlHandler() error {
-	d, e := loadKernel32()
-	if e != nil {
-		return e
-	}
-	
-	return restoreConsoleCtrlHandler(d)
 }
 
 func generateConsoleCtrlEvent(d *syscall.DLL, pid int) error {
@@ -89,13 +76,4 @@ func generateConsoleCtrlEvent(d *syscall.DLL, pid int) error {
 	}
 
 	return nil
-}
-
-func GenerateConsoleCtrlEvent(pid int) error {
-	d, e := loadKernel32()
-	if e != nil {
-		return e
-	}
-	
-	return generateConsoleCtrlEvent(d, pid)
 }

@@ -6,10 +6,10 @@ import (
 	"os"
 )
 
-func SendCtrlC(p *os.Process) error {
+func sendCtrlC(p *os.Process) error {
 	return p.Signal(os.Interrupt)
 }
 
-func RestoreConsoleCtrlHandler() error {
+func restoreConsoleCtrlHandler() error {
 	return nil
 }

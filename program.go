@@ -7,6 +7,12 @@ import (
 	"sync"
 )
 
+// Program wraps the standard exec.Cmd structure provided by Go
+// but implements an easy way to send a real CTRL-C to the child
+// process (which can be handled it), also on Windows (even though its not possible
+// using the standard libraries). However on windows if you create more than one
+// child process and you call Stop() on one of the programs, all the childs
+// will receive the signal, even if they are created using the standard libraries
 type Program struct {
 	dir string
 	execName string
@@ -18,6 +24,9 @@ type Program struct {
 	lastExitCode int
 }
 
+// Creates a new program. You can specify the working directory, or leave it
+// blank to use the current one, and if the standard output and error should be redirected.
+// Currently standard input redirect its not supported but will be implemented soon
 func NewProgram(dir string, redirect bool, execName string, args ...string) (*Program, error) {
 	info, err := os.Stat(dir)
 	if err != nil {
@@ -39,10 +48,12 @@ func NewProgram(dir string, redirect bool, execName string, args ...string) (*Pr
 	return p, nil
 }
 
+// Tells whether the program is running or not
 func (p *Program) IsRunning() bool {
 	return p.exec != nil
 }
 
+// Starts the program if its not already running, otherwise returns an error
 func (p *Program) Start() error {
 	if p.IsRunning() {
 		return fmt.Errorf("program %s already running", p.execName)
@@ -56,6 +67,8 @@ func (p *Program) Start() error {
 	return nil
 }
 
+// Reports the last exit code of the program. If it returns -1, it means
+// that the program never started or has not exited yet
 func (p *Program) LastExitCode() int {
 	return p.lastExitCode
 }
@@ -97,6 +110,8 @@ func (p *Program) wait() {
 	}
 }
 
+// Waits the program until its exits, or returns instantly
+// if the program isn't running
 func (p *Program) Wait() {
 	if p.exec == nil {
 		return
@@ -106,7 +121,8 @@ func (p *Program) Wait() {
 	<- p.exitC
 }
 
-func(p *Program) Run() error {
+// Starts the program and waits for its exit
+func (p *Program) Run() error {
 	err := p.Start()
 	if err != nil {
 		return err
@@ -116,6 +132,7 @@ func(p *Program) Run() error {
 	return nil
 }
 
+// Forces the program to exit
 func (p *Program) Kill() {
 	if p.exec != nil {
 		p.exec.Process.Kill()
@@ -123,6 +140,8 @@ func (p *Program) Kill() {
 	}
 }
 
+// Sends a CTRL-C signal to the process. On Windows this signal is sent
+// to all existing child processes spawned from every library
 func (p *Program) Stop() error {
 	if p.exec == nil {
 		return nil
